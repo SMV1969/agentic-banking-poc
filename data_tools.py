@@ -1,11 +1,20 @@
 # data_tools.py
-from provider import PostgresProvider
-
 import hashlib
 import logging
 from typing import List, Dict, Optional
 
-from db import get_pg_connection
+#from provider import PostgresProvider
+#--- BankingDataProvider
+def _init_provider() -> BankingDataProvider:
+    mode = os.getenv("DATA_PROVIDER", "postgres").lower()
+    if mode == "api":
+        return ApiProvider()
+    # default
+    return PostgresProvider()
+
+#--- BankingDataProvider
+
+provider = _init_provider()
 
 # --- Logging setup ---
 logger = logging.getLogger("agentic_poc")

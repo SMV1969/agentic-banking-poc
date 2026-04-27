@@ -1,8 +1,10 @@
-# provider.py
 from __future__ import annotations
 
+import os
 from abc import ABC, abstractmethod
 from typing import Dict, List, Optional
+
+import requests  # placeholder for future API provider
 
 from db import get_pg_connection
 
@@ -159,3 +161,26 @@ class PostgresProvider(BankingDataProvider):
             row = cur.fetchone()
 
         return row[0] if row else None
+
+
+class ApiProvider(BankingDataProvider):
+    """
+    Placeholder provider to show API-based integration.
+    Not wired to any real endpoint yet.
+    """
+
+    def __init__(self):
+        self.base_url = os.getenv("BANK_API_BASE_URL", "")
+        self.token = os.getenv("BANK_API_TOKEN", "")
+
+    def fetch_account_details(self, account_id: str) -> Optional[Dict]:
+        raise NotImplementedError("ApiProvider is not wired to a real bank API yet")
+
+    def fetch_customer_portfolio(self, customer_id: str) -> Dict:
+        raise NotImplementedError("ApiProvider is not wired to a real bank API yet")
+
+    def fetch_high_value_customers(self, threshold: float) -> List[Dict]:
+        raise NotImplementedError("ApiProvider is not wired to a real bank API yet")
+
+    def resolve_customer_id(self, account_id: str) -> Optional[str]:
+        raise NotImplementedError("ApiProvider is not wired to a real bank API yet")
