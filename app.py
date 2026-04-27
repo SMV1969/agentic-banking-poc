@@ -1,7 +1,8 @@
 #app.py
 import logging
-
 import streamlit as st
+import pandas as pd
+
 
 from data_tools import (
     get_account_details,
