@@ -1,6 +1,7 @@
 import sqlite3
 import hashlib
 import logging
+from typing import List, Dict
 from pathlib import Path
 
 DB_FILE = "banking_core.db"
@@ -32,6 +33,88 @@ def mask_name(name: str) -> str:
     token = hashlib.md5(name.encode()).hexdigest()[:4]
     return f"CUST_{token}"
 
+
+# --- Tool 1: get_details Structured ---
+# ... existing imports, logger, _get_connection, mask_name,
+# get_account_details, identify_high_value_customers stay as they are ...
+
+
+def get_account_details_structured(account_id: str) -> Dict[str, object]:
+    """
+    Returns account details as a dict for UI rendering.
+    Empty dict if account not found.
+    """
+    logger.info("TOOL_CALL|get_account_details_structured|account_id=%s", account_id)
+
+    conn = _get_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT account_id, customer_name, balance, account_type, kyc_status "
+        "FROM accounts WHERE account_id = ?",
+        (account_id,),
+    )
+    row = cursor.fetchone()
+    conn.close()
+
+    if not row:
+        logger.warning(
+            "TOOL_RESULT|get_account_details_structured|account_id=%s|status=NOT_FOUND",
+            account_id,
+        )
+        return {}
+
+    acc_id, name, balance, acc_type, kyc = row
+    logger.info(
+        "TOOL_RESULT|get_account_details_structured|account_id=%s|status=FOUND|balance=%.2f|type=%s|kyc=%s",
+        acc_id,
+        balance,
+        acc_type,
+        kyc,
+    )
+    return {
+        "account_id": acc_id,
+        "customer_name": name,
+        "balance": balance,
+        "account_type": acc_type,
+        "kyc_status": kyc,
+    }
+
+
+def identify_high_value_customers_structured(
+    threshold: float = 50000.0,
+) -> List[Dict[str, object]]:
+    """
+    Returns list of dicts with masked_id and balance for high-value customers.
+    """
+    logger.info(
+        "TOOL_CALL|identify_high_value_customers_structured|threshold=%.2f", threshold
+    )
+
+    conn = _get_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT customer_name, balance FROM accounts WHERE balance > ?",
+        (threshold,),
+    )
+    rows = cursor.fetchall()
+    conn.close()
+
+    result: List[Dict[str, object]] = []
+    for name, balance in rows:
+        result.append(
+            {
+                "masked_id": mask_name(name),
+                "balance": balance,
+            }
+        )
+
+    logger.info(
+        "TOOL_RESULT|identify_high_value_customers_structured|threshold=%.2f|count=%d",
+        threshold,
+        len(result),
+    )
+    return result
+    
 
 # --- Tool 1: get_details ---
 
@@ -112,3 +195,27 @@ def identify_high_value_customers(threshold: float = 50000.0) -> str:
     )
 
     return "High-value customers (masked): " + " | ".join(masked_results)
+
+def identify_high_value_customers_structured(threshold: float = 50000.0) -> list[dict]:
+    """
+    Returns a list of dicts with masked_id and balance for high-value customers.
+    """
+    conn = _get_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT customer_name, balance FROM accounts WHERE balance > ?",
+        (threshold,),
+    )
+    rows = cursor.fetchall()
+    conn.close()
+
+    result = []
+    for name, balance in rows:
+        result.append(
+            {
+                "masked_id": mask_name(name),
+                "balance": balance,
+            }
+        )
+    return result
+    
