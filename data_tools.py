@@ -34,6 +34,194 @@ def mask_name(name: str) -> str:
     return f"CUST_{token}"
 
 
+#-----get_customer_portfolio_structured_by_ID
+def get_customer_portfolio_by_id(customer_id: str) -> Dict[str, object]:
+    """
+    Returns a portfolio view for a given customer_id (CIF):
+    - list of accounts (id, type, balance, kyc)
+    - total balance
+    """
+    logger.info(
+        "TOOL_CALL|get_customer_portfolio_by_id|customer_id=%s", customer_id
+    )
+
+    conn = _get_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        SELECT account_id, customer_name, balance, account_type, kyc_status
+        FROM accounts
+        WHERE customer_id = ?
+        """,
+        (customer_id,),
+    )
+    rows = cursor.fetchall()
+    conn.close()
+
+    if not rows:
+        logger.warning(
+            "TOOL_RESULT|get_customer_portfolio_by_id|customer_id=%s|status=NOT_FOUND",
+            customer_id,
+        )
+        return {
+            "customer_id": customer_id,
+            "customer_name": None,
+            "status": "NOT_FOUND",
+            "accounts": [],
+            "total_balance": 0.0,
+        }
+
+    accounts = []
+    total_balance = 0.0
+    customer_name = rows[0][1]  # use name from first row
+
+    for acc_id, name, balance, acc_type, kyc in rows:
+        accounts.append(
+            {
+                "account_id": acc_id,
+                "balance": balance,
+                "account_type": acc_type,
+                "kyc_status": kyc,
+            }
+        )
+        total_balance += balance
+
+    logger.info(
+        "TOOL_RESULT|get_customer_portfolio_by_id|customer_id=%s|status=FOUND|count=%d|total_balance=%.2f",
+        customer_id,
+        len(accounts),
+        total_balance,
+    )
+
+    return {
+        "customer_id": customer_id,
+        "customer_name": customer_name,
+        "status": "FOUND",
+        "accounts": accounts,
+        "total_balance": total_balance,
+    }
+
+
+def get_customer_id_by_account_id(account_id: str) -> str | None:
+    """
+    Returns customer_id for a given account_id, or None if not found.
+    """
+    conn = _get_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT customer_id FROM accounts WHERE account_id = ?",
+        (account_id,),
+    )
+    row = cursor.fetchone()
+    conn.close()
+    if not row:
+        return None
+    return row[0]
+    
+#-----get_customer_portfolio_structured_by_ID
+
+#-----get_customer_portfolio_structured
+
+
+def get_customer_portfolio_structured(customer_name: str) -> Dict[str, object]:
+    """
+    Returns a portfolio view for a given customer_name:
+    - list of accounts (id, type, balance, kyc)
+    - total balance
+    """
+    logger.info("TOOL_CALL|get_customer_portfolio_structured|customer_name=%s", customer_name)
+
+    conn = _get_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        SELECT account_id, balance, account_type, kyc_status
+        FROM accounts
+        WHERE customer_name = ?
+        """,
+        (customer_name,),
+    )
+    rows = cursor.fetchall()
+    conn.close()
+
+    if not rows:
+        logger.warning(
+            "TOOL_RESULT|get_customer_portfolio_structured|customer_name=%s|status=NOT_FOUND",
+            customer_name,
+        )
+        return {
+            "customer_name": customer_name,
+            "status": "NOT_FOUND",
+            "accounts": [],
+            "total_balance": 0.0,
+        }
+
+    accounts = []
+    total_balance = 0.0
+    for acc_id, balance, acc_type, kyc in rows:
+        accounts.append(
+            {
+                "account_id": acc_id,
+                "balance": balance,
+                "account_type": acc_type,
+                "kyc_status": kyc,
+            }
+        )
+        total_balance += balance
+
+    logger.info(
+        "TOOL_RESULT|get_customer_portfolio_structured|customer_name=%s|status=FOUND|count=%d|total_balance=%.2f",
+        customer_name,
+        len(accounts),
+        total_balance,
+    )
+
+    return {
+        "customer_name": customer_name,
+        "status": "FOUND",
+        "accounts": accounts,
+        "total_balance": total_balance,
+    }
+
+
+def list_customer_portfolios_above_threshold(threshold: float = 100000.0) -> List[Dict[str, object]]:
+    """
+    Aggregates accounts by customer_name and returns customers whose
+    total portfolio balance exceeds the threshold.
+    """
+    logger.info(
+        "TOOL_CALL|list_customer_portfolios_above_threshold|threshold=%.2f", threshold
+    )
+
+    conn = _get_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        SELECT customer_name, SUM(balance) as total_balance
+        FROM accounts
+        GROUP BY customer_name
+        HAVING total_balance > ?
+        """,
+        (threshold,),
+    )
+    rows = cursor.fetchall()
+    conn.close()
+
+    results: List[Dict[str, object]] = []
+    for name, total in rows:
+        results.append({"customer_name": name, "total_balance": total})
+
+    logger.info(
+        "TOOL_RESULT|list_customer_portfolios_above_threshold|threshold=%.2f|count=%d",
+        threshold,
+        len(results),
+    )
+
+    return results
+ 
+#-----get_customer_portfolio_structured
+
+
 # --- Tool 1: get_details Structured ---
 # ... existing imports, logger, _get_connection, mask_name,
 # get_account_details, identify_high_value_customers stay as they are ...
