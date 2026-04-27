@@ -140,22 +140,22 @@ if user_query:
                     )
 
     # Route 3: Customer portfolio (by customer_id or account_id)
-    elif "portfolio" in q_lower:
-        route = "customer_portfolio"
-        logger.info("ROUTING|customer_portfolio")
+    elif "portfolio" in q_lower or "cust" in q_lower:
+    route = "customer_portfolio"
+    logger.info("ROUTING|customer_portfolio")
 
-        cust_id = None
-        acc_id = None
+    cust_id = None
+    acc_id = None
 
-        # Detect CUSTxxx or ACCxxx tokens in the query
-        words = user_query.replace(",", " ").split()
-        for w in words:
-            w_up = w.upper()
-            if w_up.startswith("CUST"):
-                cust_id = w_up
-                break
-            if w_up.startswith("ACC"):
-                acc_id = w_up
+    # Detect CUSTxxx or ACCxxx tokens in the query
+    words = user_query.replace(",", " ").split()
+    for w in words:
+        w_up = w.upper()
+        if w_up.startswith("CUST"):
+            cust_id = w_up
+            break
+        if w_up.startswith("ACC"):
+            acc_id = w_up
 
         # Resolve customer_id if only account_id is provided
         if not cust_id and acc_id:
