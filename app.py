@@ -138,24 +138,23 @@ if user_query:
                         f"{details['account_type']} | "
                         f"{details['kyc_status']}"
                     )
-
     # Route 3: Customer portfolio (by customer_id or account_id)
     elif "portfolio" in q_lower or "cust" in q_lower:
-    route = "customer_portfolio"
-    logger.info("ROUTING|customer_portfolio")
+        route = "customer_portfolio"
+        logger.info("ROUTING|customer_portfolio")
 
-    cust_id = None
-    acc_id = None
+        cust_id = None
+        acc_id = None
 
-    # Detect CUSTxxx or ACCxxx tokens in the query
-    words = user_query.replace(",", " ").split()
-    for w in words:
-        w_up = w.upper()
-        if w_up.startswith("CUST"):
-            cust_id = w_up
-            break
-        if w_up.startswith("ACC"):
-            acc_id = w_up
+        # Detect CUSTxxx or ACCxxx tokens in the query
+        words = user_query.replace(",", " ").split()
+        for w in words:
+            w_up = w.upper()
+            if w_up.startswith("CUST"):
+                cust_id = w_up
+                break
+            if w_up.startswith("ACC"):
+                acc_id = w_up
 
         # Resolve customer_id if only account_id is provided
         if not cust_id and acc_id:
@@ -179,8 +178,6 @@ if user_query:
                     response = f"No accounts found for customer id '{cust_id}'."
                     st.warning(response)
                 else:
-                    import pandas as pd
-
                     st.subheader(
                         f"Portfolio – {details['customer_name']} ({details['customer_id']})"
                     )
@@ -204,6 +201,9 @@ if user_query:
                         f"{len(details['accounts'])} accounts, total balance "
                         f"{details['total_balance']:,.2f}"
                     )
+    # Route 3: Customer portfolio (by customer_id or account_id)
+    
+   
     # Route 4: Help / unsupported query
     else:
         route = "help"
