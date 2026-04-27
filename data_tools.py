@@ -1,9 +1,11 @@
 # data_tools.py
+
+import os
 import hashlib
 import logging
 from typing import List, Dict, Optional
 
-#from provider import PostgresProvider
+from provider import PostgresProvider, ApiProvider, BankingDataProvider
 #--- BankingDataProvider
 def _init_provider() -> BankingDataProvider:
     mode = os.getenv("DATA_PROVIDER", "postgres").lower()
