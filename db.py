@@ -4,11 +4,17 @@ import psycopg2
 from contextlib import contextmanager
 from dotenv import load_dotenv
 
+
+import os
+import psycopg2
+from contextlib import contextmanager
+from dotenv import load_dotenv
+
 load_dotenv()
 
 DB_HOST = os.getenv("PG_HOST", "localhost")
 DB_PORT = os.getenv("PG_PORT", "5432")
-DB_NAME = os.getenv("PG_DB", "postgres")  # <- use 'postgres' to match current_database()
+DB_NAME = os.getenv("PG_DB", "postgres")
 DB_USER = os.getenv("PG_USER", "postgres")
 DB_PASS = os.getenv("PG_PASS", "")
 
