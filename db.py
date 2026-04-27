@@ -4,12 +4,6 @@ import psycopg2
 from contextlib import contextmanager
 from dotenv import load_dotenv
 
-
-import os
-import psycopg2
-from contextlib import contextmanager
-from dotenv import load_dotenv
-
 load_dotenv()
 
 DB_HOST = os.getenv("PG_HOST", "localhost")
@@ -26,6 +20,7 @@ def get_pg_connection():
         dbname=DB_NAME,
         user=DB_USER,
         password=DB_PASS,
+        sslmode="require",          # <- important for Neon
     )
     try:
         yield conn
